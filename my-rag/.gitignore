@@ -1,0 +1,23 @@
+# Môi trường ảo (Virtual Environment)
+.venv/
+venv/
+env/
+.env
+
+# Cache và file tạm của Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Dữ liệu cục bộ của Chroma Vector Database
+chroma_db/
+*.sqlite3
+*.db
+
+# Thư mục IDE/Editor
+.vscode/
+.idea/
+
+# Các file dữ liệu sinh ra (như file text mẫu, pdf mẫu)
+data.txt
