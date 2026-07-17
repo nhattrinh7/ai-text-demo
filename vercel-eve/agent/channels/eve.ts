@@ -7,10 +7,12 @@ export default eveChannel({
   auth: [
     async (req: Request) => {
       // Use getToken directly to avoid importing next-auth main module which crashes in raw node
+      const isSecure = process.env.NODE_ENV === "production" || req.url.startsWith("https://");
       const token = await getToken({
         req: req as any,
         secret: process.env.AUTH_SECRET,
-        salt: "authjs.session-token"
+        salt: isSecure ? "__Secure-authjs.session-token" : "authjs.session-token",
+        secureCookie: isSecure,
       });
 
       if (token?.sub) {
