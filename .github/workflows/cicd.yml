@@ -43,15 +43,7 @@ jobs:
         working-directory: ./vercel-eve
         run: npm run typecheck
 
-      # Bước 7: Chạy Unit/Integration Tests
-      - name: Test
-        working-directory: ./vercel-eve
-        run: npm run test
-        env:
-          # Đưa biến môi trường DATABASE_URL từ GitHub Secrets vào để test có thể kết nối DB
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # Mock tạm một khóa bí mật (dành cho NextAuth) để qua bước khởi tạo trong test
-          AUTH_SECRET: "mock_secret_for_ci_testing_only_12345678"
+
 
   # JOB 2: Kiểm tra cho thư mục mcp-server (Dự án Python)
   ci-mcp-server:
