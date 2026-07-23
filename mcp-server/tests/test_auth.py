@@ -24,7 +24,9 @@ def test_auth_missing_header():
 
 def test_auth_invalid_header():
     """Test trường hợp request có header Authorization nhưng token sai"""
-    response = client.get("/test", headers={"Authorization": "Bearer invalid_token_123"})
+    response = client.get(
+        "/test", headers={"Authorization": "Bearer invalid_token_123"}
+    )
     assert response.status_code == 401
     assert response.json() == {"detail": "Unauthorized"}
 

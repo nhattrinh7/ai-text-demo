@@ -34,6 +34,8 @@ jobs:
       - name: Prisma Generate
         working-directory: ./vercel-eve
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
 
       # Bước 5: Kiểm tra định dạng và quy tắc viết code bằng ESLint
       - name: Lint

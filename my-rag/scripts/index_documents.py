@@ -21,8 +21,8 @@ _project_root = str(Path(__file__).resolve().parent.parent)
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-from app.config import settings
-from app.services.rag import RAGService
+from app.config import settings  # noqa: E402
+from app.services.rag import RAGService  # noqa: E402
 
 
 def main() -> None:
