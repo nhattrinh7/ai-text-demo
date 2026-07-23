@@ -13,7 +13,7 @@
     "typecheck": "tsc",
     "db:push": "dotenv -e .env -- prisma db push",
     "db:generate": "dotenv -e .env -- prisma generate",
-    "lint": "eslint .",
+    "lint": "next lint",
     "format": "prettier --write ."
   },
   "dependencies": {

@@ -138,9 +138,6 @@ jobs:
       - name: Test (Pytest)
         working-directory: ./my-rag
         run: uv run pytest
-        env:
-          # Đưa biến môi trường OPENAI_API_KEY từ GitHub Secrets vào để test gọi được API OpenAI
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   # JOB 4: Deploy lên EC2 cho các project Python (mcp-server & my-rag)
   deploy-ec2:
