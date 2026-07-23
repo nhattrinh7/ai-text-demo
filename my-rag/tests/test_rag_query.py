@@ -1,6 +1,13 @@
+import os
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+
+@pytest.mark.skipif(
+    not os.path.exists("vectorstore/index.faiss"), 
+    reason="FAISS index not found (likely running in CI)"
+)
 
 def test_query_endpoint_success():
     # Sử dụng 'with' block để TestClient tự động kích hoạt sự kiện lifespan

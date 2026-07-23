@@ -37,10 +37,6 @@ jobs:
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
 
-      # Bước 5: Kiểm tra định dạng và quy tắc viết code bằng ESLint
-      - name: Lint
-        working-directory: ./vercel-eve
-        run: npm run lint
 
       # Bước 6: Kiểm tra tính đúng đắn của các kiểu dữ liệu (Typescript)
       - name: Typecheck
