@@ -1,56 +1,56 @@
-"use server";
+'use server';
 
-import { prisma } from "~/lib/prisma";
-import bcrypt from "bcryptjs";
-import { sendVerificationEmail } from "~/lib/mail";
+import { prisma } from '~/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { sendVerificationEmail } from '~/lib/mail';
 
 export async function registerUser(formData: FormData) {
-  const email = formData.get("email")?.toString();
-  const password = formData.get("password")?.toString();
+  const email = formData.get('email')?.toString();
+  const password = formData.get('password')?.toString();
 
   if (!email || !password) {
-    return { error: "Email and password are required" };
+    return { error: 'Email and password are required' };
   }
 
-  // Check if user already exists
+  // Kiểm tra xem user đã tồn tại chưa
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
 
   if (existingUser) {
-    return { error: "User already exists with this email" };
+    return { error: 'User already exists with this email' };
   }
 
-  // Hash password
+  // Mã hóa mật khẩu (Hash password)
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Generate 6-digit OTP
+  // Tạo mã OTP 6 số
   const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const verifyCodeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+  const verifyCodeExpiry = new Date(Date.now() + 5 * 60 * 1000); // hết hạn sau 5 phút
 
-  // Create user
+  // Tạo user mới
   await prisma.user.create({
     data: {
       email,
-      name: email.split("@")[0],
+      name: email.split('@')[0],
       password: hashedPassword,
       verifyCode,
       verifyCodeExpiry,
     },
   });
 
-  // Send email
+  // Gửi email xác thực
   await sendVerificationEmail(email, verifyCode);
 
   return { success: true };
 }
 
 export async function verifyEmail(formData: FormData) {
-  const email = formData.get("email")?.toString();
-  const code = formData.get("code")?.toString();
+  const email = formData.get('email')?.toString();
+  const code = formData.get('code')?.toString();
 
   if (!email || !code) {
-    return { error: "Email and code are required" };
+    return { error: 'Email and code are required' };
   }
 
   const user = await prisma.user.findUnique({
@@ -58,22 +58,22 @@ export async function verifyEmail(formData: FormData) {
   });
 
   if (!user) {
-    return { error: "User not found" };
+    return { error: 'User not found' };
   }
 
   if (user.emailVerified) {
-    return { error: "Email already verified" };
+    return { error: 'Email already verified' };
   }
 
   if (user.verifyCode !== code) {
-    return { error: "Invalid verification code" };
+    return { error: 'Invalid verification code' };
   }
 
   if (!user.verifyCodeExpiry || user.verifyCodeExpiry < new Date()) {
-    return { error: "Verification code has expired" };
+    return { error: 'Verification code has expired' };
   }
 
-  // Update user as verified
+  // Cập nhật trạng thái user đã xác thực
   await prisma.user.update({
     where: { email },
     data: {
@@ -88,7 +88,7 @@ export async function verifyEmail(formData: FormData) {
 
 export async function resendVerificationCode(email: string) {
   if (!email) {
-    return { error: "Email is required" };
+    return { error: 'Email is required' };
   }
 
   const user = await prisma.user.findUnique({
@@ -96,18 +96,18 @@ export async function resendVerificationCode(email: string) {
   });
 
   if (!user) {
-    return { error: "User not found" };
+    return { error: 'User not found' };
   }
 
   if (user.emailVerified) {
-    return { error: "Email already verified" };
+    return { error: 'Email already verified' };
   }
 
-  // Generate 6-digit OTP
+  // Tạo mã OTP 6 số
   const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const verifyCodeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+  const verifyCodeExpiry = new Date(Date.now() + 5 * 60 * 1000); // hết hạn sau 5 phút
 
-  // Update user
+  // Cập nhật user
   await prisma.user.update({
     where: { email },
     data: {
@@ -116,10 +116,8 @@ export async function resendVerificationCode(email: string) {
     },
   });
 
-  // Send email
+  // Gửi email
   await sendVerificationEmail(email, verifyCode);
 
   return { success: true };
 }
-
-

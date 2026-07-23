@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 3001
 
 # Chạy server
-CMD ["uv", "run", "python", "server.py"]
+CMD ["uv", "run", "python", "-m", "app.main"]

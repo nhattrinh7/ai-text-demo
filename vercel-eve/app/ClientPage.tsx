@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Sidebar from "~/components/Sidebar";
-import ChatArea from "~/components/ChatArea";
+import { useState } from 'react';
+import Sidebar from '~/components/Sidebar';
+import ChatArea from '~/components/ChatArea';
 
 export default function ClientPage() {
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -10,7 +10,7 @@ export default function ClientPage() {
   return (
     <div className="flex h-screen bg-white">
       <Sidebar currentId={currentId} onSelect={setCurrentId} />
-      <ChatArea key={currentId || "empty"} conversationId={currentId} />
+      <ChatArea key={currentId || 'empty'} conversationId={currentId} />
     </div>
   );
 }

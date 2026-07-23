@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 # Dưới đây định nghĩa các lỗi Custom
 
+
 # Lỗi gốc
 class RAGServiceError(Exception):
     """Lỗi cơ bản từ dịch vụ RAG — KHÔNG để lộ chi tiết cho client."""

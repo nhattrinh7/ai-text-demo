@@ -35,7 +35,7 @@ app = FastAPI(
 )
 
 # --- Xử lý ngoại lệ (ẩn lỗi nội bộ) ---
-app.add_exception_handler(ServiceNotReadyError, service_not_ready_handler)
+app.add_exception_handler(ServiceNotReadyError, service_not_ready_handler)  # type: ignore
 app.add_exception_handler(Exception, global_exception_handler)
 
 # --- Khai báo Routes ---

@@ -47,7 +47,6 @@ class RAGService:
         self._rag_chain = None
         self._embeddings = OpenAIEmbeddings(model=settings.embedding_model)
 
-
     # Initialization
     def load_existing(self) -> None:
         """Tải FAISS vectorstore đã lưu từ ổ đĩa."""
@@ -97,14 +96,12 @@ class RAGService:
         # 5. Khởi tạo chuỗi để dịch vụ sẵn sàng dùng ngay
         self._build_chain(vectorstore)
 
-
     # Query
     def query(self, question: str) -> str:
         """Đưa câu hỏi qua chuỗi RAG và trả về chuỗi câu trả lời."""
         if self._rag_chain is None:
             raise ServiceNotReadyError("Dịch vụ RAG chưa được khởi tạo.")
         return self._rag_chain.invoke(question)
-
 
     # Internal
     def _build_chain(self, vectorstore: FAISS) -> None:

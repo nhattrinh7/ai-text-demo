@@ -1,25 +1,33 @@
-"use client";
+'use client';
 
-import { useEveAgent } from "eve/react";
-import { useEffect, useRef, useState } from "react";
-import { Send } from "lucide-react";
-import type { HandleMessageStreamEvent, SessionState } from "eve/client";
+import { useEveAgent } from 'eve/react';
+import { useEffect, useRef, useState } from 'react';
+import { Send } from 'lucide-react';
+import type { HandleMessageStreamEvent, SessionState } from 'eve/client';
 
-import { getConversationById, saveConversationState } from "~/app/actions/chat";
+import { getConversationById, saveConversationState } from '~/app/actions/chat';
 
-export default function ChatArea({ conversationId }: { conversationId: string | null }) {
-  const [dbData, setDbData] = useState<{ events: readonly HandleMessageStreamEvent[], session: SessionState } | null>(null);
+export default function ChatArea({
+  conversationId,
+}: {
+  conversationId: string | null;
+}) {
+  const [dbData, setDbData] = useState<{
+    events: readonly HandleMessageStreamEvent[];
+    session: SessionState;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!conversationId) return;
     setLoading(true);
-    getConversationById(conversationId).then(data => {
+    getConversationById(conversationId).then((data) => {
       setDbData({
         events: (data?.events as any) ?? [],
-        session: (data?.session && Object.keys(data.session as any).length > 0)
-          ? (data.session as any)
-          : undefined,
+        session:
+          data?.session && Object.keys(data.session as any).length > 0
+            ? (data.session as any)
+            : undefined,
       });
       setLoading(false);
     });
@@ -29,8 +37,13 @@ export default function ChatArea({ conversationId }: { conversationId: string | 
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-md">
-          <h3 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Eve</h3>
-          <p className="text-gray-500">Select a conversation from the sidebar or create a new one to start chatting.</p>
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">
+            Welcome to Eve
+          </h3>
+          <p className="text-gray-500">
+            Select a conversation from the sidebar or create a new one to start
+            chatting.
+          </p>
         </div>
       </div>
     );
@@ -47,10 +60,24 @@ export default function ChatArea({ conversationId }: { conversationId: string | 
     );
   }
 
-  return <ActiveChat conversationId={conversationId} initialEvents={dbData.events} initialSession={dbData.session} />;
+  return (
+    <ActiveChat
+      conversationId={conversationId}
+      initialEvents={dbData.events}
+      initialSession={dbData.session}
+    />
+  );
 }
 
-function ActiveChat({ conversationId, initialEvents, initialSession }: { conversationId: string; initialEvents: readonly HandleMessageStreamEvent[]; initialSession?: SessionState }) {
+function ActiveChat({
+  conversationId,
+  initialEvents,
+  initialSession,
+}: {
+  conversationId: string;
+  initialEvents: readonly HandleMessageStreamEvent[];
+  initialSession?: SessionState;
+}) {
   const { data, send, status } = useEveAgent({
     initialEvents,
     initialSession,
@@ -60,57 +87,88 @@ function ActiveChat({ conversationId, initialEvents, initialSession }: { convers
         snapshot.events as any,
         snapshot.session as any
       );
-    }
+    },
   });
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const messages = data?.messages || [];
-  const isLoading = status === "submitted" || status === "streaming";
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     send({ message: input });
-    setInput("");
+    setInput('');
   };
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   return (
     <div className="flex-1 flex flex-col bg-white h-full relative">
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && !isLoading && (
-          <div className="text-center text-gray-400 mt-10">Start a conversation!</div>
+          <div className="text-center text-gray-400 mt-10">
+            Start a conversation!
+          </div>
         )}
         {messages.map((m) => {
-          console.log(`[ChatArea] message id=${m.id} role=${m.role} parts=`, JSON.stringify(m.parts.map(p => ({ type: p.type, text: (p as any).text, toolName: (p as any).toolName }))));
+          console.log(
+            `[ChatArea] message id=${m.id} role=${m.role} parts=`,
+            JSON.stringify(
+              m.parts.map((p) => ({
+                type: p.type,
+                text: (p as any).text,
+                toolName: (p as any).toolName,
+              }))
+            )
+          );
 
-          const hasVisibleParts = m.parts.some(p => p.type !== "step-start");
+          const hasVisibleParts = m.parts.some((p) => p.type !== 'step-start');
           if (!hasVisibleParts) return null;
 
           return (
-            <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={m.id}
+              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm whitespace-pre-wrap ${m.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-none"
-                    : "bg-gray-100 text-gray-800 rounded-bl-none"
-                  }`}
+                className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm whitespace-pre-wrap ${
+                  m.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                }`}
               >
                 {m.parts.map((p, i) => {
-                  if (p.type === "text") return <span key={i}>{p.text}</span>;
-                  if (p.type === "reasoning") return <div key={i} className="text-sm opacity-70 italic mt-1">{p.text}</div>;
-                  if (p.type === "dynamic-tool") return (
-                    <div key={i} className="mt-1">
-                      <div className="text-sm text-blue-700 font-semibold italic">[Tool: {p.toolName}]</div>
-                      <InputRequestActions part={p} send={send} />
-                    </div>
-                  );
-                  if (p.type === "step-start") return null;
-                  if (p.type === "authorization") return <div key={i} className="text-sm text-orange-600 italic mt-1">[Auth: {(p as any).displayName}]</div>;
+                  if (p.type === 'text') return <span key={i}>{p.text}</span>;
+                  if (p.type === 'reasoning')
+                    return (
+                      <div key={i} className="text-sm opacity-70 italic mt-1">
+                        {p.text}
+                      </div>
+                    );
+                  if (p.type === 'dynamic-tool')
+                    return (
+                      <div key={i} className="mt-1">
+                        <div className="text-sm text-blue-700 font-semibold italic">
+                          [Tool: {p.toolName}]
+                        </div>
+                        <InputRequestActions part={p} send={send} />
+                      </div>
+                    );
+                  if (p.type === 'step-start') return null;
+                  if (p.type === 'authorization')
+                    return (
+                      <div
+                        key={i}
+                        className="text-sm text-orange-600 italic mt-1"
+                      >
+                        [Auth: {(p as any).displayName}]
+                      </div>
+                    );
                   return null;
                 })}
               </div>
@@ -129,7 +187,10 @@ function ActiveChat({ conversationId, initialEvents, initialSession }: { convers
         <div ref={bottomRef} />
       </div>
       <div className="p-4 border-t bg-gray-50">
-        <form onSubmit={handleSubmit} className="flex space-x-2 max-w-4xl mx-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="flex space-x-2 max-w-4xl mx-auto"
+        >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -150,23 +211,26 @@ function ActiveChat({ conversationId, initialEvents, initialSession }: { convers
   );
 }
 
-function InputRequestActions({ part, send }: { part: any, send: any }) {
+function InputRequestActions({ part, send }: { part: any; send: any }) {
   const inputRequest = part.toolMetadata?.eve?.inputRequest;
   if (!inputRequest) return null;
 
   const inputResponse = part.toolMetadata?.eve?.inputResponse;
   const selectedOption = inputRequest.options?.find(
-    (option: any) => option.id === inputResponse?.optionId,
+    (option: any) => option.id === inputResponse?.optionId
   );
 
-  const [textInput, setTextInput] = useState("");
+  const [textInput, setTextInput] = useState('');
 
   if (inputResponse) {
     return (
       <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
         <p className="text-sm text-yellow-800">{inputRequest.prompt}</p>
         <p className="text-sm font-medium mt-1 text-gray-800">
-          Responded: {selectedOption?.label ?? inputResponse.text ?? inputResponse.optionId}
+          Responded:{' '}
+          {selectedOption?.label ??
+            inputResponse.text ??
+            inputResponse.optionId}
         </p>
       </div>
     );
@@ -181,13 +245,16 @@ function InputRequestActions({ part, send }: { part: any, send: any }) {
             key={option.id}
             onClick={() => {
               send({
-                inputResponses: [{ optionId: option.id, requestId: inputRequest.requestId }],
+                inputResponses: [
+                  { optionId: option.id, requestId: inputRequest.requestId },
+                ],
               });
             }}
-            className={`px-3 py-1.5 text-sm rounded-md transition ${option.style === "danger"
-                ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
-                : "bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300"
-              }`}
+            className={`px-3 py-1.5 text-sm rounded-md transition ${
+              option.style === 'danger'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
+            }`}
           >
             {option.label}
           </button>
@@ -205,7 +272,12 @@ function InputRequestActions({ part, send }: { part: any, send: any }) {
             onClick={() => {
               if (textInput.trim()) {
                 send({
-                  inputResponses: [{ text: textInput.trim(), requestId: inputRequest.requestId }],
+                  inputResponses: [
+                    {
+                      text: textInput.trim(),
+                      requestId: inputRequest.requestId,
+                    },
+                  ],
                 });
               }
             }}

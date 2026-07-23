@@ -1,9 +1,9 @@
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "~/lib/prisma"
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '~/lib/prisma';
 
-import { CredentialsSignin } from "next-auth"
+import { CredentialsSignin } from 'next-auth';
 
 class CustomAuthError extends CredentialsSignin {
   constructor(msg: string) {
@@ -17,54 +17,67 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "test@example.com" },
-        password: { label: "Password", type: "password", placeholder: "any password works" }
+        email: {
+          label: 'Email',
+          type: 'email',
+          placeholder: 'test@example.com',
+        },
+        password: {
+          label: 'Password',
+          type: 'password',
+          placeholder: 'any password works',
+        },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new CustomAuthError("Email and password are required.");
+          throw new CustomAuthError('Email and password are required.');
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }
-        })
+          where: { email: credentials.email as string },
+        });
 
         if (!user || !user.password) {
-          throw new CustomAuthError("Invalid email or password.");
+          throw new CustomAuthError('Invalid email or password.');
         }
 
-        const isValidPassword = await require("bcryptjs").compare(credentials.password, user.password)
+        const isValidPassword = await require('bcryptjs').compare(
+          credentials.password,
+          user.password
+        );
         if (!isValidPassword) {
-          throw new CustomAuthError("Invalid email or password.");
+          throw new CustomAuthError('Invalid email or password.');
         }
 
         if (!user.emailVerified) {
-          throw new CustomAuthError("Email not verified. Please verify your email first.");
+          throw new CustomAuthError(
+            'Email not verified. Please verify your email first.'
+          );
         }
 
-        return user
-      }
-    })
+        return user;
+      },
+    }),
   ],
   pages: {
     signIn: '/login',
   },
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
   callbacks: {
     async session({ session, token }) {
       if (token?.sub) {
-        session.user.id = token.sub
+        session.user.id = token.sub;
       }
-      return session
+      return session;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.sub = user.id
+        token.sub = user.id;
       }
-      return token
-    }
+      return token;
+    },
   },
   secret: process.env.AUTH_SECRET,
-})
+});

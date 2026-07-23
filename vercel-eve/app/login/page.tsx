@@ -1,36 +1,40 @@
-"use client";
+'use client';
 
-import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function LoginForm() {
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // If NextAuth redirects back here with an error, it's usually in the query params
-  const errorParam = searchParams.get("error");
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  // Nếu NextAuth chuyển hướng về đây cùng với lỗi, lỗi đó thường nằm trong query params
+  const errorParam = searchParams.get('error');
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-    const result = await signIn("credentials", {
+    const result = await signIn('credentials', {
       email,
       password,
       redirect: false,
     });
 
     if (result?.error) {
-      setError(result.error === "CredentialsSignin" ? "Invalid email or password." : result.error);
+      setError(
+        result.error === 'CredentialsSignin'
+          ? 'Invalid email or password.'
+          : result.error
+      );
       setLoading(false);
     } else {
       router.push(callbackUrl);
@@ -49,12 +53,17 @@ function LoginForm() {
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
           {(error || errorParam) && (
             <div className="text-red-500 text-sm text-center font-medium bg-red-50 border border-red-200 p-2 rounded-md">
-              {error || (errorParam === "CredentialsSignin" ? "Invalid email or password." : errorParam)}
+              {error ||
+                (errorParam === 'CredentialsSignin'
+                  ? 'Invalid email or password.'
+                  : errorParam)}
             </div>
           )}
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
@@ -65,7 +74,9 @@ function LoginForm() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -83,12 +94,15 @@ function LoginForm() {
               disabled={loading}
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
           <div className="text-sm text-center">
             <span className="text-gray-600">Don't have an account? </span>
-            <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <a
+              href="/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Sign up here
             </a>
           </div>

@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 # File này nằm trong thư mục con scripts/, nhưng nó lại cần lấy code từ thư mục app/
-# nếu import thẳng sẽ lỗi ModuleNotFoundError 
+# nếu import thẳng sẽ lỗi ModuleNotFoundError
 # Đoạn code dưới lùi 2 cấp (.parent.parent) để ra thư mục gốc my-rag
 # rồi nhét đường dẫn thư mục gốc vào sys.path
 # Đảm bảo thư mục gốc nằm trong sys.path để có thể import package `app`.

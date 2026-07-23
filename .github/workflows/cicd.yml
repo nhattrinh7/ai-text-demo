@@ -1,0 +1,174 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
+
+# Các jobs này sẽ chạy song song mặc định.
+jobs:
+  # JOB 1: Kiểm tra cho thư mục vercel-eve (Dự án Next.js)
+  ci-vercel-eve:
+    name: CI (vercel-eve)
+    runs-on: ubuntu-latest
+    steps:
+      # Bước 1: Kéo toàn bộ mã nguồn về máy ảo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Bước 2: Cài đặt Node.js môi trường để chạy code Next.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm" # Bật tính năng cache để tăng tốc cho các lần cài đặt sau
+          cache-dependency-path: "vercel-eve/package-lock.json"
+
+      # Bước 3: Cài đặt các dependencies trong package.json
+      - name: Install dependencies
+        working-directory: ./vercel-eve
+        run: npm ci
+
+      # Bước 4: Chạy sinh các file Prisma Client dựa trên schema
+      - name: Prisma Generate
+        working-directory: ./vercel-eve
+        run: npx prisma generate
+
+      # Bước 5: Kiểm tra định dạng và quy tắc viết code bằng ESLint
+      - name: Lint
+        working-directory: ./vercel-eve
+        run: npm run lint
+
+      # Bước 6: Kiểm tra tính đúng đắn của các kiểu dữ liệu (Typescript)
+      - name: Typecheck
+        working-directory: ./vercel-eve
+        run: npm run typecheck
+
+      # Bước 7: Chạy Unit/Integration Tests
+      - name: Test
+        working-directory: ./vercel-eve
+        run: npm run test
+        env:
+          # Đưa biến môi trường DATABASE_URL từ GitHub Secrets vào để test có thể kết nối DB
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Mock tạm một khóa bí mật (dành cho NextAuth) để qua bước khởi tạo trong test
+          AUTH_SECRET: "mock_secret_for_ci_testing_only_12345678"
+
+  # JOB 2: Kiểm tra cho thư mục mcp-server (Dự án Python)
+  ci-mcp-server:
+    name: CI (mcp-server)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Cài đặt uv
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true # Bật cache để những lần tải thư viện sau nhanh hơn
+
+      # Cài đặt Python 3.13
+      - name: Install Python 3.13
+        run: uv python install 3.13
+
+      # Cài đặt tất cả thư viện (bao gồm cả thư viện test và lint như ruff, pyright)
+      - name: Install dependencies
+        working-directory: ./mcp-server
+        run: uv sync --all-extras --dev
+
+      # Chạy Ruff để kiểm tra chuẩn định dạng code
+      - name: Lint (Ruff)
+        working-directory: ./mcp-server
+        run: uv run ruff check .
+
+      # Chạy Pyright để kiểm tra kiểu (Type checking) cho Python tĩnh
+      - name: Typecheck (Pyright)
+        working-directory: ./mcp-server
+        run: uv run pyright
+
+      # Chạy Pytest để thực thi các bài Test cho mcp-server
+      - name: Test (Pytest)
+        working-directory: ./mcp-server
+        run: uv run pytest
+
+  # JOB 3: Kiểm tra cho thư mục my-rag (Dự án Python/Langchain)
+  ci-my-rag:
+    name: CI (my-rag)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      # Cài đặt Python 3.13
+      - name: Install Python 3.13
+        run: uv python install 3.13
+
+      # Cài đặt dependencies
+      - name: Install dependencies
+        working-directory: ./my-rag
+        run: uv sync --all-extras --dev
+
+      # Kiểm tra quy chuẩn code (Lint)
+      - name: Lint (Ruff)
+        working-directory: ./my-rag
+        run: uv run ruff check .
+
+      # Kiểm tra type tĩnh của code
+      - name: Typecheck (Pyright)
+        working-directory: ./my-rag
+        run: uv run pyright
+
+      # Thực thi các Test cho my-rag
+      - name: Test (Pytest)
+        working-directory: ./my-rag
+        run: uv run pytest
+        env:
+          # Đưa biến môi trường OPENAI_API_KEY từ GitHub Secrets vào để test gọi được API OpenAI
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  # JOB 4: Deploy lên EC2 cho các project Python (mcp-server & my-rag)
+  deploy-ec2:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    # Chỉ chạy deploy nếu build/test của các dự án Python pass
+    needs: [ci-mcp-server, ci-my-rag]
+    # Chỉ chạy deploy khi code được merge/push vào nhánh master (không deploy khi đang mở PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Executing remote ssh commands using SSH key
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Nếu port không có trong secret, mặc định dùng port 22
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            # Di chuyển vào thư mục dự án trên EC2
+            cd /home/ubuntu/ai-text-demo
+            
+            # Fetch code mới nhất và ép (reset) code cục bộ giống hệt nhánh master
+            git fetch --all
+            git reset --hard origin/master
+            
+            # --- Cập nhật biến môi trường ---
+            echo "Updating env files..."
+            cd my-rag
+            echo "${{ secrets.ENV_MY_RAG }}" > .env
+            
+            cd ../mcp-server
+            echo "${{ secrets.ENV_MCP_SERVER }}" > .env
+            cd ..
+            
+            # --- Khởi động lại dịch vụ bằng Docker Compose ---
+            echo "Rebuilding and restarting Docker containers..."
+            docker compose up --build -d

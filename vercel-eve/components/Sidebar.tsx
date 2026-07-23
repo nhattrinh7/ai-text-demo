@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { PlusCircle, MessageSquare, LogOut } from "lucide-react";
-import { getConversations, createConversation } from "~/app/actions/chat";
-import { signOut } from "next-auth/react";
+import { useState, useEffect } from 'react';
+import { PlusCircle, MessageSquare, LogOut } from 'lucide-react';
+import { getConversations, createConversation } from '~/app/actions/chat';
+import { signOut } from 'next-auth/react';
 
 interface Conversation {
   id: string;
@@ -20,7 +20,7 @@ export default function Sidebar({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
+  const [newTitle, setNewTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   const fetchConvos = async () => {
@@ -34,7 +34,7 @@ export default function Sidebar({
   }, []);
 
   const handleCreateClick = () => {
-    setNewTitle("New Chat");
+    setNewTitle('New Chat');
     setIsModalOpen(true);
   };
 
@@ -59,25 +59,32 @@ export default function Sidebar({
     <div className="w-64 bg-gray-900 text-gray-100 flex flex-col h-full shadow-xl">
       <div className="p-5 flex items-center justify-between border-b border-gray-800">
         <h2 className="font-bold text-xl tracking-tight">My Chats</h2>
-        <button onClick={handleCreateClick} className="text-gray-400 hover:text-white transition-colors">
+        <button
+          onClick={handleCreateClick}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
           <PlusCircle size={24} />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {loading ? (
           <div className="animate-pulse flex space-x-2 p-3">
-             <div className="h-4 w-4 bg-gray-700 rounded-full"></div>
-             <div className="h-4 w-3/4 bg-gray-700 rounded"></div>
+            <div className="h-4 w-4 bg-gray-700 rounded-full"></div>
+            <div className="h-4 w-3/4 bg-gray-700 rounded"></div>
           </div>
         ) : conversations.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center mt-6">No conversations yet.</p>
+          <p className="text-sm text-gray-500 text-center mt-6">
+            No conversations yet.
+          </p>
         ) : (
           conversations.map((c) => (
             <button
               key={c.id}
               onClick={() => onSelect(c.id)}
               className={`w-full text-left px-3 py-3 rounded-lg flex items-center space-x-3 transition-colors ${
-                currentId === c.id ? "bg-blue-600 text-white font-medium shadow" : "hover:bg-gray-800 text-gray-300 hover:text-white"
+                currentId === c.id
+                  ? 'bg-blue-600 text-white font-medium shadow'
+                  : 'hover:bg-gray-800 text-gray-300 hover:text-white'
               }`}
             >
               <MessageSquare size={18} />
@@ -104,7 +111,10 @@ export default function Sidebar({
             </div>
             <form onSubmit={submitCreate} className="p-5 space-y-4">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Conversation Title
                 </label>
                 <input
@@ -138,7 +148,7 @@ export default function Sidebar({
                       Creating...
                     </>
                   ) : (
-                    "Create Chat"
+                    'Create Chat'
                   )}
                 </button>
               </div>

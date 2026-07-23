@@ -21,4 +21,4 @@ export default defineTool({
       message: `Đã chuyển khoản thành công $${amount} từ tài khoản [${fromAccount}] đến [${toAccount}].`,
     };
   },
-}); 
+});

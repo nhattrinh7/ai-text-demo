@@ -2,7 +2,7 @@ import { defineTool } from 'eve/tools';
 import { always } from 'eve/tools/approval';
 import { z } from 'zod';
 
-// Open-Meteo Geocoding API response shape (only the fields we use).
+// Định dạng kết quả trả về của Open-Meteo Geocoding API (chỉ lấy các trường cần thiết).
 interface GeoResult {
   name: string;
   country: string;
@@ -10,7 +10,7 @@ interface GeoResult {
   longitude: number;
 }
 
-// Open-Meteo Weather API "current" block shape (only the fields we use).
+// Định dạng kết quả block "current" của Open-Meteo Weather API (chỉ lấy các trường cần thiết).
 interface CurrentWeather {
   temperature_2m: number;
   relative_humidity_2m: number;
@@ -20,7 +20,7 @@ interface CurrentWeather {
 
 /**
  * Map WMO weather-code ranges to human-readable descriptions.
- * See https://open-meteo.com/en/docs#weathervariables for full table.
+ * Xem bảng chi tiết tại https://open-meteo.com/en/docs#weathervariables
  */
 function describeWeatherCode(code: number): string {
   if (code === 0) return 'Clear sky';
@@ -57,11 +57,11 @@ export default defineTool({
     condition: z.string(),
   }),
 
-  // Every call pauses for human approval before executing.
+  // Mỗi lần gọi tool sẽ tạm dừng chờ người dùng phê duyệt trước khi chạy.
   approval: always(),
 
   async execute({ city }) {
-    // ── Step 1: Geocode city name → lat/lon ──────────────────────────
+    // ── Bước 1: Tra cứu tên thành phố → tọa độ lat/lon ──────────────────────────
     const geoUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
     geoUrl.searchParams.set('name', city);
     geoUrl.searchParams.set('count', '1');
@@ -78,19 +78,19 @@ export default defineTool({
     if (!geoData.results?.length) {
       throw new Error(
         `Could not find a location matching "${city}". ` +
-          'Try a different spelling or a nearby major city.',
+          'Try a different spelling or a nearby major city.'
       );
     }
 
     const { name, country, latitude, longitude } = geoData.results[0];
 
-    // ── Step 2: Fetch current weather at those coordinates ───────────
+    // ── Bước 2: Lấy thông tin thời tiết hiện tại từ tọa độ đó ───────────
     const wxUrl = new URL('https://api.open-meteo.com/v1/forecast');
     wxUrl.searchParams.set('latitude', String(latitude));
     wxUrl.searchParams.set('longitude', String(longitude));
     wxUrl.searchParams.set(
       'current',
-      'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+      'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code'
     );
 
     const wxRes = await fetch(wxUrl);

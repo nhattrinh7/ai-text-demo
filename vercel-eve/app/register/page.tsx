@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { registerUser } from "~/app/actions/auth";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { registerUser } from '~/app/actions/auth';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    
+    const email = formData.get('email') as string;
+
     const result = await registerUser(formData);
 
     if (result?.error) {
@@ -36,10 +36,14 @@ export default function RegisterPage() {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
-          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 name="email"
@@ -50,7 +54,9 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -68,11 +74,14 @@ export default function RegisterPage() {
               disabled={loading}
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
             >
-              {loading ? "Registering..." : "Register"}
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </div>
           <div className="text-sm text-center">
-            <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <a
+              href="/login"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Already have an account? Sign in
             </a>
           </div>
