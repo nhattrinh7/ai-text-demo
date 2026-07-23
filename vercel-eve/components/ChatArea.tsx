@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import type { HandleMessageStreamEvent, SessionState } from "eve/client";
 
-import { getConversationById, saveConversationState } from "~/app/actions";
+import { getConversationById, saveConversationState } from "~/app/actions/chat";
 
 export default function ChatArea({ conversationId }: { conversationId: string | null }) {
   const [dbData, setDbData] = useState<{ events: readonly HandleMessageStreamEvent[], session: SessionState } | null>(null);

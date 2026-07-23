@@ -2,6 +2,11 @@ node_modules
 .env*
 .eve
 .vercel
+
+*.db
+*.sqlite
+*.sqlite3
+
 .workflow-data
 .next
 .output

@@ -3,6 +3,15 @@ import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "~/lib/prisma"
 
+import { CredentialsSignin } from "next-auth"
+
+class CustomAuthError extends CredentialsSignin {
+  constructor(msg: string) {
+    super();
+    this.code = msg;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -12,25 +21,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password", placeholder: "any password works" }
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
+        if (!credentials?.email || !credentials?.password) {
+          throw new CustomAuthError("Email and password are required.");
+        }
 
-        let user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email: credentials.email as string }
         })
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: credentials.email as string,
-              name: (credentials.email as string).split('@')[0],
-            }
-          })
+        if (!user || !user.password) {
+          throw new CustomAuthError("Invalid email or password.");
+        }
+
+        const isValidPassword = await require("bcryptjs").compare(credentials.password, user.password)
+        if (!isValidPassword) {
+          throw new CustomAuthError("Invalid email or password.");
+        }
+
+        if (!user.emailVerified) {
+          throw new CustomAuthError("Email not verified. Please verify your email first.");
         }
 
         return user
       }
     })
   ],
+  pages: {
+    signIn: '/login',
+  },
   session: {
     strategy: "jwt",
   },

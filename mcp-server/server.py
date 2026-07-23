@@ -1,6 +1,11 @@
 import os
 import requests
+import uvicorn
+from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from middleware import APIKeyMiddleware
+
+load_dotenv()
 
 # Khởi tạo MCP Server
 mcp = FastMCP("RAG_MCP_Server", host="0.0.0.0", port=3001)
@@ -25,4 +30,6 @@ def ask_knowledge_base(query: str) -> str:
         return f"Error communicating with RAG Service: {str(e)}"
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http")
+    app = mcp.streamable_http_app()
+    app.add_middleware(APIKeyMiddleware)
+    uvicorn.run(app, host="0.0.0.0", port=3001)

@@ -17,5 +17,5 @@ COPY . .
 # Mở cổng 8000
 EXPOSE 8000
 
-# Chạy server
-CMD ["uv", "run", "python", "api.py"]
+# Chạy server bằng uvicorn trực tiếp trỏ vào app module
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

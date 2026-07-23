@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PlusCircle, MessageSquare, LogOut } from "lucide-react";
-import { getConversations, createConversation } from "~/app/actions";
+import { getConversations, createConversation } from "~/app/actions/chat";
 import { signOut } from "next-auth/react";
 
 interface Conversation {

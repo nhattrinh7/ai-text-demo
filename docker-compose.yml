@@ -5,8 +5,6 @@ services:
     build: 
       context: ./my-rag
     container_name: my-rag
-    ports:
-      - "8000:8000"
     restart: always
     env_file:
       - ./my-rag/.env  # Đọc biến môi trường như OPENAI_API_KEY từ my-rag/.env
@@ -18,7 +16,7 @@ services:
     ports:
       - "3001:3001"
     restart: always
-    environment:
-      - RAG_SERVICE_URL=http://my-rag:8000/query
+    env_file:
+      - ./mcp-server/.env
     depends_on:
       - my-rag

@@ -10,6 +10,9 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
+# Vectorstore (generated — rebuild with scripts/index_documents.py)
+vectorstore/
+
 # Dữ liệu cục bộ của Chroma Vector Database
 chroma_db/
 *.sqlite3
@@ -19,5 +22,9 @@ chroma_db/
 .vscode/
 .idea/
 
-# Các file dữ liệu sinh ra (như file text mẫu, pdf mẫu)
+# Các file dữ liệu sinh ra
 data.txt
+
+# Logs
+logs/
+*.log
