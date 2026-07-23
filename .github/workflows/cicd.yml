@@ -129,6 +129,11 @@ jobs:
         working-directory: ./my-rag
         run: uv run pyright
 
+      # Bước phụ: Tạo file .env từ secret để code có thể nạp OPENAI_API_KEY
+      - name: Create .env
+        working-directory: ./my-rag
+        run: echo "${{ secrets.ENV_MY_RAG }}" > .env
+
       # Thực thi các Test cho my-rag
       - name: Test (Pytest)
         working-directory: ./my-rag
