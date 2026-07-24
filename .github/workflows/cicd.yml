@@ -10,7 +10,7 @@ on:
 jobs:
   # JOB 1: Kiểm tra cho thư mục vercel-eve (Dự án Next.js)
   ci-vercel-eve:
-    name: CI (vercel-eve)
+    name: CICD (vercel-eve)
     runs-on: ubuntu-latest
     steps:
       # Bước 1: Kéo toàn bộ mã nguồn về máy ảo
@@ -37,7 +37,6 @@ jobs:
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
 
-
       # Bước 6: Kiểm tra tính đúng đắn của các kiểu dữ liệu (Typescript)
       - name: Typecheck
         working-directory: ./vercel-eve
@@ -52,11 +51,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AUTH_SECRET: "mock_secret_for_ci_testing_only_12345678"
 
-
-
   # JOB 2: Kiểm tra cho thư mục mcp-server (Dự án Python)
   ci-mcp-server:
-    name: CI (mcp-server)
+    name: CICD (mcp-server)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -95,7 +92,7 @@ jobs:
 
   # JOB 3: Kiểm tra cho thư mục my-rag (Dự án Python/Langchain)
   ci-my-rag:
-    name: CI (my-rag)
+    name: CICD (my-rag)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -156,20 +153,20 @@ jobs:
           script: |
             # Di chuyển vào thư mục dự án trên EC2
             cd /home/ubuntu/ai-text-demo
-            
+
             # Fetch code mới nhất và ép (reset) code cục bộ giống hệt nhánh master
             git fetch --all
             git reset --hard origin/master
-            
+
             # --- Cập nhật biến môi trường ---
             echo "Updating env files..."
             cd my-rag
             echo "${{ secrets.ENV_MY_RAG }}" > .env
-            
+
             cd ../mcp-server
             echo "${{ secrets.ENV_MCP_SERVER }}" > .env
             cd ..
-            
+
             # --- Khởi động lại dịch vụ bằng Docker Compose ---
             echo "Rebuilding and restarting Docker containers..."
             docker compose up --build -d
