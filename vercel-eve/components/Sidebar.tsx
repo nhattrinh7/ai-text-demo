@@ -38,7 +38,7 @@ export default function Sidebar({
     setIsModalOpen(true);
   };
 
-  const submitCreate = async (e: React.FormEvent) => {
+  const submitCreate = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || isCreating) return;
 

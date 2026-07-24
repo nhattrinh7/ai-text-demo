@@ -14,7 +14,7 @@ function LoginForm() {
   const errorParam = searchParams.get('error');
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError('');

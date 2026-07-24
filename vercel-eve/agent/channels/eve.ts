@@ -1,7 +1,7 @@
 import { eveChannel } from 'eve/channels/eve';
 import { localDev, none, vercelOidc } from 'eve/channels/auth';
 import { getToken } from 'next-auth/jwt';
-import { CloudCog } from 'lucide-react';
+
 
 export default eveChannel({
   auth: [
@@ -10,7 +10,7 @@ export default eveChannel({
       const isSecure =
         process.env.NODE_ENV === 'production' || req.url.startsWith('https://');
       const token = await getToken({
-        req: req as any,
+        req: req as Parameters<typeof getToken>[0]['req'],
         secret: process.env.AUTH_SECRET,
         salt: isSecure
           ? '__Secure-authjs.session-token'

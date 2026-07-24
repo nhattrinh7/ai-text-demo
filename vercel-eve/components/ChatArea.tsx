@@ -14,7 +14,7 @@ export default function ChatArea({
 }) {
   const [dbData, setDbData] = useState<{
     events: readonly HandleMessageStreamEvent[];
-    session: SessionState;
+    session?: SessionState;
   } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,10 +23,10 @@ export default function ChatArea({
     setLoading(true);
     getConversationById(conversationId).then((data) => {
       setDbData({
-        events: (data?.events as any) ?? [],
+        events: (data?.events as HandleMessageStreamEvent[]) ?? [],
         session:
-          data?.session && Object.keys(data.session as any).length > 0
-            ? (data.session as any)
+          data?.session && Object.keys(data.session as SessionState).length > 0
+            ? (data.session as SessionState)
             : undefined,
       });
       setLoading(false);
@@ -84,8 +84,8 @@ function ActiveChat({
     onFinish(snapshot) {
       saveConversationState(
         conversationId,
-        snapshot.events as any,
-        snapshot.session as any
+        snapshot.events as HandleMessageStreamEvent[],
+        snapshot.session as SessionState
       );
     },
   });
@@ -94,7 +94,7 @@ function ActiveChat({
   const messages = data?.messages || [];
   const isLoading = status === 'submitted' || status === 'streaming';
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     send({ message: input });
@@ -116,16 +116,16 @@ function ActiveChat({
           </div>
         )}
         {messages.map((m) => {
-          console.log(
-            `[ChatArea] message id=${m.id} role=${m.role} parts=`,
-            JSON.stringify(
-              m.parts.map((p) => ({
-                type: p.type,
-                text: (p as any).text,
-                toolName: (p as any).toolName,
-              }))
-            )
-          );
+          // console.log(
+          //   `[ChatArea] message id=${m.id} role=${m.role} parts=`,
+          //   JSON.stringify(
+          //     m.parts.map((p) => ({
+          //       type: p.type,
+          //       text: (p as { text?: string }).text,
+          //       toolName: (p as { toolName?: string }).toolName,
+          //     }))
+          //   )
+          // );
 
           const hasVisibleParts = m.parts.some((p) => p.type !== 'step-start');
           if (!hasVisibleParts) return null;
@@ -166,7 +166,7 @@ function ActiveChat({
                         key={i}
                         className="text-sm text-orange-600 italic mt-1"
                       >
-                        [Auth: {(p as any).displayName}]
+                        [Auth: {(p as { displayName?: string }).displayName}]
                       </div>
                     );
                   return null;
@@ -211,7 +211,7 @@ function ActiveChat({
   );
 }
 
-function InputRequestActions({ part, send }: { part: any; send: any }) {
+function InputRequestActions({ part, send }: { part: { toolMetadata?: { eve?: { inputRequest?: any, inputResponse?: any } } }; send: (action: any) => void }) {
   const inputRequest = part.toolMetadata?.eve?.inputRequest;
   if (!inputRequest) return null;
 

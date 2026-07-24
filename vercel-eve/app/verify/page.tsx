@@ -14,7 +14,7 @@ function VerifyForm() {
 
   const email = searchParams.get('email') || '';
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError('');

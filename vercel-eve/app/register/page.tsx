@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError('');

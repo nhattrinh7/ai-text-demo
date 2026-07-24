@@ -2,7 +2,8 @@
 
 import { prisma } from '~/lib/prisma';
 import { auth } from '~/auth';
-import { CloudCog } from 'lucide-react';
+import { Prisma } from '@prisma/client';
+import type { HandleMessageStreamEvent, SessionState } from 'eve/client';
 
 export async function getConversations() {
   const session = await auth();
@@ -42,15 +43,15 @@ export async function getConversationById(id: string) {
 
   return {
     ...conversation,
-    events: conversation.events as any,
-    session: conversation.session as any,
+    events: conversation.events as unknown as HandleMessageStreamEvent[],
+    session: conversation.session as unknown as SessionState,
   };
 }
 
 export async function saveConversationState(
   id: string,
-  events: any,
-  eveSession: any
+  events: HandleMessageStreamEvent[],
+  eveSession: SessionState
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error('Unauthorized');
@@ -58,8 +59,8 @@ export async function saveConversationState(
   await prisma.conversation.updateMany({
     where: { id, userId: session.user.id },
     data: {
-      events,
-      session: eveSession,
+      events: events as unknown as Prisma.InputJsonValue,
+      session: eveSession as unknown as Prisma.InputJsonValue,
     },
   });
 }
