@@ -7,23 +7,23 @@ generator client {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  verifyCode    String?
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  verifyCode       String?
   verifyCodeExpiry DateTime?
-  accounts      Account[]
-  sessions      Session[]
- 
+  accounts         Account[]
+  sessions         Session[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   conversations Conversation[]
 }
- 
+
 model Account {
   userId            String
   type              String
@@ -36,36 +36,66 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([provider, providerAccountId])
 }
- 
+
 model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
- 
-
 
 model Conversation {
   id        String   @id @default(cuid())
   title     String   @default("New Chat")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  events    Json     @default("[]")
-  session   Json     @default("{}")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Lịch sử toàn bộ các turn chat của user và agent trong conversation.
+  // Bao gồm rất nhiều sự kiện, ko phải chỉ câu hỏi của user và câu trl của agent:
+
+  // turn.started: Bắt đầu một lượt chat mới.
+  // message.received: Nhận được câu hỏi "CDC là gì?" của bạn.
+  // step.started: Bắt đầu bước suy nghĩ thứ nhất.
+  // actions.requested: Agent ra lệnh gọi Tool.
+  // action.result: Tool tìm kiếm trả về kết quả.
+  // step.completed: Kết thúc bước suy nghĩ thứ nhất.
+  // step.started (lần 2): Agent bắt đầu bước suy nghĩ thứ hai.
+  // ...
+  events Json @default("[]")
+
+  // Là 1 object chứa các biến trạng thái nội bộ:
+  // 1. sessionId: ID phòng Chat, dùng để ĐỌC. ai có sessionId này sẽ có thể yêu cầu
+  // server "Hãy stream cho tôi xem lịch sử và diễn biến hiện tại trong căn phòng này"
+  // mang giá trị cố định.
+
+  // 2. streamIndex: trỏ đến số thứ tự (index) của sự kiện cuối cùng trong mảng events trên.
+  // Do useEveAgent tự sinh ra và cập nhật.
+  // giá trị thay đổi sau mỗi turn
+
+  // 3. continuationToken: token để fe nói cho be biết mình hợp lệ và thuộc conversation
+  // nào,...
+  // Chìa khóa chô phép VIẾT. Dùng để gửi tin nhắn mới cho eVE Server.
+  // mang giá trị cố định
+
+  // **QUAN TRỌNG**: 3 thằng này đã được useEveAgent tự xử lí hoàn toàn
+  // Theo AI: việc sinh ra sessionId cho việc đọc và continuationToken cho việc ghi một
+  // cách riêng biệt là hợp lí, ví dụ làm tính năng "Share đoạn chat cho bạn bè xem". 
+  // MÌnh chỉ cần cấp cho họ cái sessionId. Họ có thể mở ra xem toàn bộ lịch sử chat 
+  // (Read-only) trơn tru, nhưng vì họ không có continuationToken nên họ không thể chat 
+  // tiếp vào cuộc hội thoại của mình được!
+  session Json @default("{}")
 }

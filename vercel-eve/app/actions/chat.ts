@@ -64,3 +64,30 @@ export async function saveConversationState(
     },
   });
 }
+
+export async function getSharedConversation(id: string) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+  });
+
+  if (!conversation) return null;
+
+  const rawEvents = (conversation.events as unknown as HandleMessageStreamEvent[]) || [];
+  
+  // Filter out session.waiting events which might leak the continuationToken
+  const scrubbedEvents = rawEvents.filter(event => event.type !== 'session.waiting');
+
+  const rawSession = (conversation.session as unknown as SessionState) || {};
+  
+  // Omit continuationToken from session
+  const scrubbedSession: SessionState = {
+    ...rawSession,
+    continuationToken: undefined
+  };
+
+  return {
+    ...conversation,
+    events: scrubbedEvents,
+    session: scrubbedSession,
+  };
+}

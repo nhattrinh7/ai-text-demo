@@ -2,12 +2,12 @@
 
 import { useEveAgent } from 'eve/react';
 import { useEffect, useRef, useState } from 'react';
-import { Send, Share2, Check } from 'lucide-react';
+import { Send } from 'lucide-react';
 import type { HandleMessageStreamEvent, SessionState } from 'eve/client';
 
-import { getConversationById, saveConversationState } from '~/app/actions/chat';
+import { getSharedConversation } from '~/app/actions/chat';
 
-export default function ChatArea({
+export default function SharedChatArea({
   conversationId,
 }: {
   conversationId: string | null;
@@ -17,11 +17,17 @@ export default function ChatArea({
     session?: SessionState;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!conversationId) return;
     setLoading(true);
-    getConversationById(conversationId).then((data) => {
+    getSharedConversation(conversationId).then((data) => {
+      if (!data) {
+        setError('Conversation not found or not accessible.');
+        setLoading(false);
+        return;
+      }
       setDbData({
         events: (data?.events as HandleMessageStreamEvent[]) ?? [],
         session:
@@ -33,16 +39,26 @@ export default function ChatArea({
     });
   }, [conversationId]);
 
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-md">
+          <h3 className="text-xl font-bold text-red-600 mb-2">Error</h3>
+          <p className="text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!conversationId) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-md">
           <h3 className="text-2xl font-bold text-gray-800 mb-2">
-            Welcome to Eve
+            Shared Chat
           </h3>
           <p className="text-gray-500">
-            Select a conversation from the sidebar or create a new one to start
-            chatting.
+            Invalid conversation ID.
           </p>
         </div>
       </div>
@@ -54,46 +70,32 @@ export default function ChatArea({
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-500">Loading conversation...</p>
+          <p className="text-gray-500">Loading shared conversation...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <ActiveChat
-      conversationId={conversationId}
+    <ActiveSharedChat
       initialEvents={dbData.events}
       initialSession={dbData.session}
     />
   );
 }
 
-function ActiveChat({
-  conversationId,
+function ActiveSharedChat({
   initialEvents,
   initialSession,
 }: {
-  conversationId: string;
   initialEvents: readonly HandleMessageStreamEvent[];
   initialSession?: SessionState;
 }) {
-  const { data, send, status } = useEveAgent({
+  const { data, send, status, error } = useEveAgent({
     initialEvents,
     initialSession,
-
-    // Thời điểm onFinish chạy:
-    // 1. user hỏi
-    // 2. agent suy nghĩ và trả lời
-    // 3. khi agent nhả ra chữ cuối cùng và hoàn thành, lúc này mới gọi onFinish
-    // không phải per turn
-    // *snapshot* là toàn bộ lịch sử chat từ lúc bắt đầu conversation, ko phải chỉ là các tin mới chat
     onFinish(snapshot) {
-      saveConversationState(
-        conversationId,
-        snapshot.events as HandleMessageStreamEvent[],
-        snapshot.session as SessionState
-      );
+      console.log('Read-only mode: State not saved to DB.', snapshot);
     },
   });
 
@@ -114,47 +116,26 @@ function ActiveChat({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const [copied, setCopied] = useState(false);
-  const handleShare = async () => {
-    const url = `${window.location.origin}/share/${conversationId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy', err);
-    }
-  };
-
   return (
-    <div className="flex-1 flex flex-col bg-white h-full relative">
-      <div className="absolute top-4 right-4 z-10">
-        <button
-          onClick={handleShare}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-white border border-gray-200 shadow-sm rounded-full text-sm text-gray-600 hover:bg-gray-50 transition"
-        >
-          {copied ? <Check size={16} className="text-green-600" /> : <Share2 size={16} />}
-          <span>{copied ? 'Copied Link' : 'Share Read-Only'}</span>
-        </button>
+    <div className="flex-1 flex flex-col bg-white h-full relative border-l">
+      {/* Banner Read-Only */}
+      <div className="bg-orange-100 text-orange-800 px-4 py-2 text-center text-sm font-semibold border-b border-orange-200">
+        You are viewing a shared chat in Read-Only mode. Try sending a message to see the continuationToken error!
       </div>
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 pt-16">
+      
+      {error && (
+        <div className="bg-red-100 text-red-800 px-4 py-2 text-center text-sm font-semibold border-b border-red-200">
+          Eve Server Error: {error.message}
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && !isLoading && (
           <div className="text-center text-gray-400 mt-10">
-            Start a conversation!
+            Empty shared conversation.
           </div>
         )}
         {messages.map((m) => {
-          // console.log(
-          //   `[ChatArea] message id=${m.id} role=${m.role} parts=`,
-          //   JSON.stringify(
-          //     m.parts.map((p) => ({
-          //       type: p.type,
-          //       text: (p as { text?: string }).text,
-          //       toolName: (p as { toolName?: string }).toolName,
-          //     }))
-          //   )
-          // );
-
           const hasVisibleParts = m.parts.some((p) => p.type !== 'step-start');
           if (!hasVisibleParts) return null;
 
@@ -184,10 +165,8 @@ function ActiveChat({
                         <div className="text-sm text-blue-700 font-semibold italic">
                           [Tool: {p.toolName}]
                         </div>
-                        <InputRequestActions part={p} send={send} />
                       </div>
                     );
-                  if (p.type === 'step-start') return null;
                   if (p.type === 'authorization')
                     return (
                       <div
@@ -224,7 +203,7 @@ function ActiveChat({
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
             className="flex-1 rounded-full border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 transition px-5 py-3 outline-none text-gray-800"
-            placeholder="Type your message..."
+            placeholder="Type your message to test Read-Only..."
           />
           <button
             type="submit"
@@ -235,87 +214,6 @@ function ActiveChat({
           </button>
         </form>
       </div>
-    </div>
-  );
-}
-
-function InputRequestActions({ part, send }: { part: { toolMetadata?: { eve?: { inputRequest?: any, inputResponse?: any } } }; send: (action: any) => void }) {
-  const inputRequest = part.toolMetadata?.eve?.inputRequest;
-  if (!inputRequest) return null;
-
-  const inputResponse = part.toolMetadata?.eve?.inputResponse;
-  const selectedOption = inputRequest.options?.find(
-    (option: any) => option.id === inputResponse?.optionId
-  );
-
-  const [textInput, setTextInput] = useState('');
-
-  if (inputResponse) {
-    return (
-      <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-        <p className="text-sm text-yellow-800">{inputRequest.prompt}</p>
-        <p className="text-sm font-medium mt-1 text-gray-800">
-          Responded:{' '}
-          {selectedOption?.label ??
-            inputResponse.text ??
-            inputResponse.optionId}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-      <p className="text-sm text-yellow-800 mb-2">{inputRequest.prompt}</p>
-      <div className="flex flex-wrap gap-2">
-        {inputRequest.options?.map((option: any) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              send({
-                inputResponses: [
-                  { optionId: option.id, requestId: inputRequest.requestId },
-                ],
-              });
-            }}
-            className={`px-3 py-1.5 text-sm rounded-md transition ${
-              option.style === 'danger'
-                ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
-                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-      {inputRequest.allowFreeform && (
-        <div className="mt-3 flex gap-2">
-          <input
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Type your answer..."
-            className="flex-1 text-sm px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800"
-          />
-          <button
-            onClick={() => {
-              if (textInput.trim()) {
-                send({
-                  inputResponses: [
-                    {
-                      text: textInput.trim(),
-                      requestId: inputRequest.requestId,
-                    },
-                  ],
-                });
-              }
-            }}
-            disabled={!textInput.trim()}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition"
-          >
-            Submit
-          </button>
-        </div>
-      )}
     </div>
   );
 }

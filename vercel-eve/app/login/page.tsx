@@ -10,8 +10,16 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Nếu NextAuth chuyển hướng về đây cùng với lỗi, lỗi đó thường nằm trong query params
+  // Nếu user đăng nhập thất bại, NextAuth sẽ chuyển hướng lại về trang login này cùng với lỗi,
+  // lỗi đó sẽ nằm trong query params, ví dụ: http://localhost:3000/login?error=CredentialsSignin
   const errorParam = searchParams.get('error');
+
+  // Nếu người dùng chưa đăng nhập nhưng lại cố gõ URL đến 1 trang nào đó bảo mật, vd: /chat
+  // middleware sẽ đá về trang login này với callbackUrl là trang mà họ cố truy cập:
+  // http://localhost:3000/login?callbackUrl=/chat
+  // Nhờ có dấu vết này, sau khi người dùng đăng nhập thành công thì tự nhảy đến trang /chat
+  // như họ mong muốn luôn. 
+  // Nếu họ đăng nhập theo kiểu bình thường thì sau khi đnhap thành công sẽ nhảy đến trang "/"
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   async function onSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
