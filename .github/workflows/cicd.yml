@@ -151,6 +151,8 @@ jobs:
           # Nếu port không có trong secret, mặc định dùng port 22
           port: ${{ secrets.EC2_PORT || 22 }}
           script: |
+            set -e
+
             # Di chuyển vào thư mục dự án trên EC2
             cd /home/ubuntu/ai-text-demo
 
@@ -170,3 +172,13 @@ jobs:
             # --- Khởi động lại dịch vụ bằng Docker Compose ---
             echo "Rebuilding and restarting Docker containers..."
             docker compose up --build -d
+
+            # --- Tạo Vectorstore tự động nếu chưa có ---
+            echo "Checking if vectorstore index exists..."
+            if [ ! -f my-rag/vectorstore/index.faiss ]; then
+              echo "Vectorstore index not found! Building from documents..."
+              docker compose run --rm my-rag uv run python scripts/index_documents.py
+              docker compose restart my-rag
+            else
+              echo "Vectorstore index already exists. Skipping build."
+            fi
