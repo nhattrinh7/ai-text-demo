@@ -144,12 +144,15 @@ jobs:
     steps:
       - name: Executing remote ssh commands using SSH key
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           # Nếu port không có trong secret, mặc định dùng port 22
           port: ${{ secrets.EC2_PORT || 22 }}
+          envs: GITHUB_TOKEN
           script: |
             set -e
 
@@ -157,8 +160,9 @@ jobs:
             cd /home/ubuntu/ai-text-demo
 
             # Fetch code mới nhất và ép (reset) code cục bộ giống hệt nhánh master
-            git fetch --all
-            git reset --hard origin/master
+            # (Sử dụng GITHUB_TOKEN để tránh lỗi hỏi username/password với repo private)
+            git fetch https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git master
+            git reset --hard FETCH_HEAD
 
             # --- Cập nhật biến môi trường ---
             echo "Updating env files..."
