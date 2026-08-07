@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
 
     # Bộ truy xuất (Retriever)
-    retriever_k: int = 5
+    retriever_k: int = 5        # số kết quả cuối trả cho LLM (sau rerank)
+    retriever_fetch_k: int = 20 # số kết quả thô lấy từ FAISS trước khi rerank
 
     # Paths
     vectorstore_path: str = "./vectorstore"
