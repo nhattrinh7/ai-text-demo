@@ -8,6 +8,8 @@ services:
     restart: always
     env_file:
       - ./my-rag/.env  # Đọc biến môi trường như OPENAI_API_KEY từ my-rag/.env
+    volumes:
+      - ./my-rag/vectorstore:/app/vectorstore
 
   mcp-server:
     build: 
