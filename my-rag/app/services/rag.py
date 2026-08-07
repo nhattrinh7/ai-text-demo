@@ -5,7 +5,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_voyageai import VoyageAIRerank
-from pydantic import SecretStr
 
 from app.config import Settings
 from app.exceptions import ServiceNotReadyError
@@ -50,7 +49,6 @@ class RAGService:
         self._prompt = None
         self._reranker = VoyageAIRerank(
             model="rerank-2.5-lite",
-            voyage_api_key=SecretStr(settings.voyage_api_key),
             top_k=settings.retriever_k,
         )
 
