@@ -27,5 +27,5 @@ async def query(request: QueryRequest):
     """Truy vấn cơ sở tri thức RAG bằng một câu hỏi."""
     if rag_service is None:
         raise ServiceNotReadyError("RAG service is not initialized")
-    answer = rag_service.query(request.question)
+    answer = rag_service.query(request.question, instruction=request.instruction)
     return QueryResponse(answer=answer)

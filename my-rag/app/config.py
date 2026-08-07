@@ -9,8 +9,9 @@ load_dotenv()
 class Settings(BaseSettings):
     """Cấu hình tập trung được nạp từ biến môi trường."""
 
-    # OpenAI
+    # OpenAI & Voyage
     openai_api_key: str
+    voyage_api_key: str
 
     # Nhúng (Embedding)
     embedding_model: str = "text-embedding-3-large"

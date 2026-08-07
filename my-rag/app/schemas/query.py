@@ -10,6 +10,11 @@ class QueryRequest(BaseModel):
         max_length=2000,
         description="Câu hỏi gửi tới cơ sở tri thức RAG.",
     )
+    instruction: str | None = Field(
+        default=None,
+        max_length=1000,
+        description="Chỉ thị (instruction) cho bộ Reranker để điều hướng kết quả tìm kiếm.",
+    )
 
 
 class QueryResponse(BaseModel):

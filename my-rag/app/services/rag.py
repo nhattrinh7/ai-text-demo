@@ -1,11 +1,10 @@
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.vectorstores import FAISS
 from langchain_community.vectorstores.utils import DistanceStrategy
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_voyageai import VoyageAIRerank
 
 from app.config import Settings
 from app.exceptions import ServiceNotReadyError
@@ -44,8 +43,15 @@ class RAGService:
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._rag_chain = None
         self._embeddings = OpenAIEmbeddings(model=settings.embedding_model)
+        self._vectorstore = None
+        self._llm = None
+        self._prompt = None
+        self._reranker = VoyageAIRerank(
+            model="rerank-2.5-lite",
+            voyage_api_key=settings.voyage_api_key,
+            top_k=settings.retriever_k,
+        )
 
     # Initialization
     def load_existing(self) -> None:
@@ -55,7 +61,7 @@ class RAGService:
             self._embeddings,
             allow_dangerous_deserialization=True,
         )
-        self._build_chain(vectorstore)
+        self._setup_components(vectorstore)
 
     def build_from_documents(self) -> None:
         """
@@ -93,34 +99,47 @@ class RAGService:
         # 4. Lưu ra đĩa
         vectorstore.save_local(self._settings.vectorstore_path)
 
-        # 5. Khởi tạo chuỗi để dịch vụ sẵn sàng dùng ngay
-        self._build_chain(vectorstore)
+        # 5. Khởi tạo các thành phần để dịch vụ sẵn sàng dùng ngay
+        self._setup_components(vectorstore)
 
     # Query
-    def query(self, question: str) -> str:
-        """Đưa câu hỏi qua chuỗi RAG và trả về chuỗi câu trả lời."""
-        if self._rag_chain is None:
+    def query(self, question: str, instruction: str | None = None) -> str:
+        """Đưa câu hỏi qua luồng RAG nâng cao (Advanced RAG) và trả về câu trả lời."""
+        if self._vectorstore is None or self._llm is None or self._prompt is None:
             raise ServiceNotReadyError("Dịch vụ RAG chưa được khởi tạo.")
-        return self._rag_chain.invoke(question)
+            
+        # 1. Tìm kiếm thô (k=20 để lấy nhiều hơn mức bình thường)
+        # Sử dụng base retriever của FAISS
+        raw_docs = self._vectorstore.similarity_search(question, k=20)
+        
+        # 2. Tạo câu hỏi tăng cường (nếu có chỉ thị)
+        if instruction and instruction.strip():
+            augmented_query = f"{instruction.strip()}\nQuery: {question}"
+        else:
+            augmented_query = question
+            
+        # 3. Lọc tinh bằng Voyage AI Reranker
+        # Nén/lọc 20 tài liệu xuống còn top_k (ví dụ: 5)
+        reranked_docs = self._reranker.compress_documents(
+            documents=raw_docs, 
+            query=augmented_query
+        )
+        
+        # 4. Định dạng tài liệu và gọi LLM
+        context_str = _format_docs(reranked_docs)
+        prompt_val = self._prompt.invoke({"context": context_str, "question": question})
+        
+        # 5. Lấy kết quả text (tương tự StrOutputParser)
+        response = self._llm.invoke(prompt_val)
+        return response.content
 
     # Internal
-    def _build_chain(self, vectorstore: FAISS) -> None:
-        """Kết nối bộ truy xuất (retriever) → prompt → LLM → output parser."""
-        retriever = vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": self._settings.retriever_k},
-        )
-
-        prompt = ChatPromptTemplate.from_template(_SYSTEM_TEMPLATE)
-
-        llm = ChatOpenAI(
+    def _setup_components(self, vectorstore: FAISS) -> None:
+        """Lưu trữ các thành phần cần thiết cho luồng truy vấn."""
+        self._vectorstore = vectorstore
+        self._prompt = ChatPromptTemplate.from_template(_SYSTEM_TEMPLATE)
+        self._llm = ChatOpenAI(
             model=self._settings.llm_model,
             temperature=self._settings.llm_temperature,
         )
 
-        self._rag_chain = (
-            {"context": retriever | _format_docs, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )

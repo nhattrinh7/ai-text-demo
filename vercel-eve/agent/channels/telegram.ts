@@ -1,5 +1,4 @@
 import { telegramChannel } from 'eve/channels/telegram';
-import { z } from 'zod';
 
 export default telegramChannel({
   // Tên bot của bạn, cấu hình sau khi có token
