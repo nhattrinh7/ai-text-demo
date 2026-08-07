@@ -110,7 +110,9 @@ class RAGService:
             
         # 1. Tìm kiếm thô (lấy nhiều hơn mức bình thường để Reranker có đủ dữ liệu lọc)
         # Sử dụng base retriever của FAISS
-        raw_docs = self._vectorstore.similarity_search(question, k=self._settings.retriever_fetch_k)
+        raw_docs = self._vectorstore.similarity_search(
+            question, k=self._settings.retriever_fetch_k
+        )
         
         # 2. Tạo câu hỏi tăng cường (nếu có chỉ thị)
         if instruction and instruction.strip():

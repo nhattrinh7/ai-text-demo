@@ -13,7 +13,10 @@ class QueryRequest(BaseModel):
     instruction: str | None = Field(
         default=None,
         max_length=1000,
-        description="Chỉ thị (instruction) cho bộ Reranker để điều hướng kết quả tìm kiếm.",
+        description=(
+            "Chỉ thị (instruction) cho bộ Reranker "
+            "để điều hướng kết quả tìm kiếm."
+        ),
     )
 
 
