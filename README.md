@@ -1,5 +1,6 @@
 # AI Text Demo Monorepo
 
+![RAG Success Case](./assets/rag-success.png)
 Dự án này là một hệ thống AI Agent đa dịch vụ (multi-service), bao gồm 3 thành phần chính hoạt động kết hợp với nhau.
 
 ## 🏗 Kiến trúc & Luồng hoạt động
