@@ -20,5 +20,5 @@ describe('Database Integration Tests', () => {
 
     // 3. Xác nhận số lượng đoạn chat hiện tại đúng bằng 3
     expect(user?.conversations.length).toBe(3);
-  });
+  }, 20000); // Tăng timeout lên 20 giây để tránh lỗi cold start của Serverless DB
 });
